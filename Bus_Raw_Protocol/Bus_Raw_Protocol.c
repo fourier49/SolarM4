@@ -527,7 +527,8 @@ int Check_Mac(uint8* Buffer_Array)
 		else
 			Index++;
 	}
-	//check Vailid
+	//check Vailid    //// if we got the Mac form SJB is consistance with the mak in the member table , reuse it
+					  //// if new Mac from SJB is totaly new we put the new SJB from 0 in member table
 	if(member_table[Index].MAC[5]==Buffer_Array[11] && member_table[Index].MAC[4]==Buffer_Array[10] && member_table[Index].MAC[3]==Buffer_Array[9]
       && member_table[Index].MAC[2]==Buffer_Array[8] && member_table[Index].MAC[1]==Buffer_Array[7] && member_table[Index].MAC[0]==Buffer_Array[6])
 	{
@@ -560,6 +561,7 @@ void Check_JB_Number()
 		if(member_table[i].MAC[0]!=0 || member_table[i].MAC[1]!=0 || member_table[i].MAC[2]!=0 || member_table[i].MAC[3]!=0
 				|| member_table[i].MAC[4]!=0 || member_table[i].MAC[5]!=0)
 			JB_Count++;
+		if(JB_Count>Number_of_JB) JB_Count=Number_of_JB;
 	}
 
 }
