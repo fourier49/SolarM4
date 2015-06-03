@@ -561,7 +561,7 @@ void Check_JB_Number()
 		if(member_table[i].MAC[0]!=0 || member_table[i].MAC[1]!=0 || member_table[i].MAC[2]!=0 || member_table[i].MAC[3]!=0
 				|| member_table[i].MAC[4]!=0 || member_table[i].MAC[5]!=0)
 			JB_Count++;
-		if(JB_Count>Number_of_JB) JB_Count=Number_of_JB;
+		if(JB_Count>Number_of_JB) JB_Count=Number_of_JB;//add JB_Count boundary
 	}
 
 }
