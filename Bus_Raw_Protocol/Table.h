@@ -76,4 +76,19 @@ typedef struct Periodic_Data_Transmission
 void Check_RTC_Day();
 int Check_February();
 
+
+/////////////////////////////////////////TASK
+
+Void TelentServer(UArg arg0, UArg arg1);
+
+//////////////////////PROJECT OPTION
+#define TelentServerPro
+
+
+
+
+/////////////////////////////////////
+
+
+
 #endif /* TABLE_H_ */

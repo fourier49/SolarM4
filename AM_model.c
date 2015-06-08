@@ -102,7 +102,6 @@ char* ptr1 = (char*) 0x80000;
 //int test_count = 0;
 short test_merge = 0;
 
-
 #if 1
 int  Gab_test=5;
 void time_testFunction(void)
@@ -164,10 +163,12 @@ Void tcpHandler(UArg arg0, UArg arg1) {
 		case AM_Join:
 			UARTprintf((const char*) "----Start AM Join (AMtoServer)----\n");
 			Join_Flag = Join_Failed;
+
 			do {
 				Join_Flag = AM_JoinRequest();
 				UARTprintf((const char*) "Join_Flag: %d  \n", Join_Flag);
 				TaskSleep(1000);
+
 			} while (Join_Flag != Join_Success);
 			task_Event = Update_RTC;
 			task_Event = TCPPeriodicLink;
@@ -611,6 +612,23 @@ Int main(Void) {
 	if (AM_Timer_Handle == NULL) {
 		System_abort("Clock create failed");
 	}
+
+
+#ifdef TelentServerPro
+	Task_Handle TCP_Tlent_taskHandle;
+	Task_Params TCP_Tlent_Params;
+	Error_Block TCP_TlentError_eb;
+	Task_Params_init(&TCP_Tlent_Params);
+	Error_init(&TCP_TlentError_eb);
+	TCP_Tlent_Params.stackSize = 2000;
+	TCP_Tlent_Params.priority = 1;
+	TCP_Tlent_taskHandle = Task_create((Task_FuncPtr)TelentServer, &TCP_Tlent_Params, &TCP_TlentError_eb);
+	if (TCP_Tlent_taskHandle == NULL) {
+		UARTprintf("main: Failed to create TCP_Tlent_taskHandle Task\n");
+	}
+#endif
+
+
 
 	/* Start BIOS */
 	BIOS_start();
