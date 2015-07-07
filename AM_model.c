@@ -77,6 +77,7 @@
 UART_Handle uart;
 /*    Function Prototype   */
 void Create_uartHandler();
+Void NEthuartHandler(UArg arg0, UArg arg1);
 unsigned char task_Event;
 extern int JB_Count;
 extern int JB_Number;
@@ -534,7 +535,7 @@ int Check_February() {
 		day = 28;
 	return day;
 }
-
+int g_MckClock;
 /*
  *  ======== main ========
  */
@@ -554,7 +555,7 @@ Int main(Void) {
 	Board_initUART();
 
 
-
+	g_MckClock=SysCtlClockGet();
 
 	INIT_UART1_Printf();
 
@@ -565,6 +566,8 @@ Int main(Void) {
 
 	Log_info0("Create TCP task");
 
+
+#ifndef NOETHNET
 	// Create TCP task
 	Task_Handle TCP_taskHandle;
 	Task_Params TCP_taskParams;
@@ -578,6 +581,26 @@ Int main(Void) {
 	if (TCP_taskHandle == NULL) {
 		UARTprintf("main: Failed to create tcpHandler Task\n");
 	}
+#else
+
+		// Create UART task (RS-485)
+		Task_Handle UART_taskHandle;
+		Task_Params UART_taskParams;
+		Error_Block UART_eb;
+		Task_Params_init(&UART_taskParams);
+		Error_init(&UART_eb);
+		UART_taskParams.stackSize = 2048;
+		UART_taskParams.priority = 1;
+		UART_taskParams.arg0 = 1000;
+		UART_taskHandle = Task_create((Task_FuncPtr) NEthuartHandler, &UART_taskParams,
+				&UART_eb);
+		if (UART_taskHandle == NULL) {
+			System_printf("main: Failed to create uartHandler Task\n");
+		}
+
+#endif
+
+
 
 	TCP_Periodic_Link_time.Updata_Period[1] = G_ENVCONFIG.Pollingtime[0];
 	TCP_Periodic_Link_time.Updata_Period[0] = G_ENVCONFIG.Pollingtime[1];
@@ -620,7 +643,7 @@ Int main(Void) {
 	Error_Block TCP_TlentError_eb;
 	Task_Params_init(&TCP_Tlent_Params);
 	Error_init(&TCP_TlentError_eb);
-	TCP_Tlent_Params.stackSize = 2000;
+	TCP_Tlent_Params.stackSize = 4096;
 	TCP_Tlent_Params.priority = 1;
 	TCP_Tlent_taskHandle = Task_create((Task_FuncPtr)TelentServer, &TCP_Tlent_Params, &TCP_TlentError_eb);
 	if (TCP_Tlent_taskHandle == NULL) {
@@ -634,4 +657,126 @@ Int main(Void) {
 	BIOS_start();
 
 	return (0);
+}
+
+
+Void NEthuartHandler(UArg arg0, UArg arg1) {
+	int i = 0;
+	int j = 0;
+	//int start_time,end_time;
+	int packet_num;
+	JB_DVAL = 1;
+
+	task_Event = Nothing;
+
+	rs485_init();
+
+	rs485_write((const uint8*) "RS-485 testing message", 22);
+	UARTprintf((const char*) "Debug testing message \n");
+
+	//Reset JB
+	for (i = 0; i < 3; i++) {
+		Reset_JB();
+		TaskSleep(500);
+	}
+	for (j = 0; j < Number_of_JB; j++) {
+		pv_value_table[j].Diode_Temperature = 0xFF;
+		for (i = 0; i < 2; i++)
+			pv_value_table[j].Voltage[i] = 0xFF;
+		for (i = 0; i < 2; i++)
+			pv_value_table[j].Current[i] = 0xFF;
+		for (i = 0; i < 4; i++)
+			pv_value_table[j].Power_Energy[i] = 0xFF;
+		for (i = 0; i < 4; i++)
+			pv_value_table[j].Alert_State[i] = 0xFF;
+		for (i = 0; i < 6; i++)
+			pv_info_table[j].MAC[i] = 0xFF;
+		for (i = 6; i < 30; i++)
+			pv_info_table[j].Serial_Number[i - 6] = 0xFF;
+		for (i = 30; i < 54; i++)
+			pv_info_table[j].Firmware_Version[i - 30] = 0xFF;
+		for (i = 54; i < 78; i++)
+			pv_info_table[j].Hardware_Version[i - 54] = 0xFF;
+		for (i = 78; i < 102; i++)
+			pv_info_table[j].Device_Specification[i - 78] = 0xFF;
+		for (i = 102; i < 110; i++)
+			pv_info_table[j].Manufacture_Date[i - 102] = 0xFF;
+		for (i = 0; i < 6; i++)
+			member_table[j].MAC[i] = 0x00;
+		member_table[j].Valid = 0;
+		member_table[j].state = JB_Free;
+	}
+	j = 0;
+
+	while (1) {
+		if (JB_DVAL == 1) {
+			JB_DVAL = 0;
+			//UARTprintf((const char*)"P[0] = %d\t P[1] = %d\n",G_ENVCONFIG.Pollingtime[0],G_ENVCONFIG.Pollingtime[1]);
+			UARTprintf((const char*) "----Test_merge = %d----\n", test_merge);
+			UARTprintf(
+					(const char*) "\n\n\n--Update_Time: %d/%d/%d-%d:%d:%d --\n\n\n",
+					AM_time.year, AM_time.mon, AM_time.mday, AM_time.hour,
+					AM_time.min, AM_time.sec);
+			UARTprintf((const char*) "----Start JB Join (JBtoAM)----\n");
+			//start_time =  Clock_getTicks();  //calculate JB Join AM Time
+			for (i = 0; i < 3; i++)					// Broadcast n times
+					{
+				//Broadcast_Packet();
+				New_Broadcast_Packet_with_Pollingtime();
+				packet_num = Rs4852Array(total_array);
+				Array2Packet(packet_num, uart);
+			}
+			//end_time =  Clock_getTicks(); //calculate JB Join AM Time
+
+			//UARTprintf((const char*)"execution time=%d \n",end_time-start_time);
+
+			Check_JB_Number();
+			UARTprintf((const char*) "\n----=JB_Number=%d JB_Count=%d=----\n",
+					JB_Number, JB_Count);
+//			UARTprintf((const char*)"\n----Number_of_JB=%d ----\n",JB_Number);
+			UARTprintf((const char*) "----END JB Join (JBtoAM)---- \n");
+
+			UARTprintf((const char*) "----Start PV Info (JB & AM)----\n");
+			Request_PV_Info(uart);
+			UARTprintf((const char*) "----End PV Info (JB & AM)----\n");
+
+			//start JB Join (JBtoServer)
+			while (task_Event != Nothing)
+				;
+			//task_Event = JB_Join;
+
+			UARTprintf((const char*) "----Start PV Value (JB & AM)----\n");
+			Periodic_Update_time.year = AM_time.year;
+			Periodic_Update_time.mon = AM_time.mon;
+			Periodic_Update_time.mday = AM_time.mday;
+			Periodic_Update_time.hour = AM_time.hour;
+			Periodic_Update_time.min = AM_time.min;
+			Periodic_Update_time.sec = AM_time.sec;
+			Request_PV_Value(uart);
+			UARTprintf((const char*) "----End PV Value (JB & AM)----\n");
+
+			//start PV_Periodic(JBtoServer)
+			while (task_Event != Nothing)
+				;
+			//task_Event = PV_Periodic;
+
+			//end_time =  Clock_getTicks(); //calculate JB Join AM Time
+
+			//UARTprintf((const char*)"\n\n >>total execution time=%d<< \n\n",end_time-start_time);
+			UARTprintf((const char*) "----Delay END----\n");
+			/*if(j>Periodic_Count)
+			 {
+			 task_Event = TCPPeriodicLink;
+			 UARTprintf((const char*)"\n\n--Update_Time: %d/%d/%d-%d:%d:%d --\n\n",AM_time.year,AM_time.mon,AM_time.mday,AM_time.hour,AM_time.min,AM_time.sec);
+			 //UARTprintf((const char*)"\n\n\n\n----Debug i = %d----\n\n\n\n\n",i);
+			 j=0;
+			 }
+			 else
+			 {
+			 j++;
+			 //UARTprintf((const char*)"\n\n\n\n----Debug j = %d----\n\n\n\n\n",j);
+			 }*/
+
+		}
+	}
 }

@@ -129,7 +129,7 @@ Void TelentServer(UArg arg0, UArg arg1)
 		}
 
 
-	fdCloseSession( (HANDLE)Task_self() );
+	//fdCloseSession( (HANDLE)Task_self() );
 
 }
 

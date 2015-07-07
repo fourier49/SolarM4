@@ -83,7 +83,7 @@ Void TelentServer(UArg arg0, UArg arg1);
 
 //////////////////////PROJECT OPTION
 #define TelentServerPro
-
+//#define NOETHNET
 
 
 
