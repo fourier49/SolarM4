@@ -263,7 +263,7 @@ Void tcpHandler(UArg arg0, UArg arg1) {
 		case TCPPeriodicLink:
 			Time_DVAL = 0;
 			//Link_Flag = TCP_Periodic_Link();
-			TCP_Periodic_Link();
+			TCP_Periodic_Link(); /// DES:server will try to link one time when AM connect to server now 
 			//task_Event = Nothing;
 			//Time_DVAL = 1;
 			task_Event = Update_RTC;
