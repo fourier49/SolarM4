@@ -38,7 +38,7 @@ int rs485_read(unsigned char *buffer, UInt size)
 	num = UART_read(uart2, (char *)buffer, size);
 	return num;
 }
-int rs485_init()
+int rs485_init(t)
 {
 	UART_Params_init(&uartParams);
 	uartParams.writeDataMode = UART_DATA_BINARY  ;
@@ -57,3 +57,18 @@ int rs485_init()
 
 	return 0;
 }
+
+
+int CloseRs485()
+{
+	if (uart2 == NULL ) {
+		System_abort("Error opening the UART2");
+		return 1;
+		}
+	UART_close(uart2);
+
+	return 0;
+}
+
+
+

@@ -33,7 +33,7 @@ Clock_Handle Periodic_Handle;
 
 /////////////AM FW version
 
-#define AM_FWversion	"AM_FW_0.01b"
+#define AM_FWversion	"AM_FW_0.01c"
 
 ////////////////////////////////////////////
 typedef struct Time_Stamp_Arrray
@@ -83,8 +83,8 @@ Void TelentServer(UArg arg0, UArg arg1);
 
 //////////////////////PROJECT OPTION
 #define TelentServerPro
-//#define NOETHNET
-
+#define ETHNET_ENABLE		1
+#define E_MACTEST			0
 
 
 /////////////////////////////////////

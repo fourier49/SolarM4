@@ -20,12 +20,14 @@
 
 #define rs485_baudRate 115200
 #define rs485_timeout 2500 //ms
+#define rs485_timeout_1 1000
 
 extern UART_Handle uart2;
 extern UART_Params uartParams;
 
 extern int rs485_write(const unsigned char *buffer, UInt size);
 extern int rs485_read(unsigned char *buffer, UInt size);
-extern int rs485_init();
+int rs485_init(int t);
+int CloseRs485();
 
 #endif /* RS485_H_ */

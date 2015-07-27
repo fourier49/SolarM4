@@ -130,7 +130,7 @@ Void tcpHandler(UArg arg0, UArg arg1) {
 	fdOpenSession((HANDLE) Task_self());
 //	network_initial();	//initial network parameter
 
-#if 1
+#if E_MACTEST
 
 	//// only for alex m4 cpu register test
 
@@ -332,7 +332,7 @@ Void uartHandler(UArg arg0, UArg arg1) {
 	int packet_num;
 	JB_DVAL = 1;
 
-	rs485_init();
+	rs485_init(rs485_timeout);
 
 	rs485_write((const uint8*) "RS-485 testing message", 22);
 	UARTprintf((const char*) "Debug testing message \n");
@@ -371,9 +371,14 @@ Void uartHandler(UArg arg0, UArg arg1) {
 	}
 	j = 0;
 
+	CloseRs485();
+
 	while (1) {
 		if (JB_DVAL == 1) {
 			JB_DVAL = 0;
+
+			rs485_init(rs485_timeout);
+
 			//UARTprintf((const char*)"P[0] = %d\t P[1] = %d\n",G_ENVCONFIG.Pollingtime[0],G_ENVCONFIG.Pollingtime[1]);
 			UARTprintf((const char*) "----Test_merge = %d----\n", test_merge);
 			UARTprintf(
@@ -387,8 +392,14 @@ Void uartHandler(UArg arg0, UArg arg1) {
 				//Broadcast_Packet();
 				New_Broadcast_Packet_with_Pollingtime();
 				packet_num = Rs4852Array(total_array);
+				UARTprintf((const char*) "Brd=%d \n",packet_num);
 				Array2Packet(packet_num, uart);
 			}
+
+			CloseRs485();
+
+			rs485_init(rs485_timeout_1);
+
 			//end_time =  Clock_getTicks(); //calculate JB Join AM Time
 
 			//UARTprintf((const char*)"execution time=%d \n",end_time-start_time);
@@ -439,7 +450,7 @@ Void uartHandler(UArg arg0, UArg arg1) {
 			 j++;
 			 //UARTprintf((const char*)"\n\n\n\n----Debug j = %d----\n\n\n\n\n",j);
 			 }*/
-
+			 CloseRs485();
 		}
 	}
 }
@@ -567,7 +578,7 @@ Int main(Void) {
 	Log_info0("Create TCP task");
 
 
-#ifndef NOETHNET
+#if  ETHNET_ENABLE
 	// Create TCP task
 	Task_Handle TCP_taskHandle;
 	Task_Params TCP_taskParams;
@@ -669,7 +680,7 @@ Void NEthuartHandler(UArg arg0, UArg arg1) {
 
 	task_Event = Nothing;
 
-	rs485_init();
+	rs485_init(rs485_timeout);
 
 	rs485_write((const uint8*) "RS-485 testing message", 22);
 	UARTprintf((const char*) "Debug testing message \n");
@@ -708,9 +719,14 @@ Void NEthuartHandler(UArg arg0, UArg arg1) {
 	}
 	j = 0;
 
+	CloseRs485();
+
 	while (1) {
 		if (JB_DVAL == 1) {
 			JB_DVAL = 0;
+
+			rs485_init(rs485_timeout);
+
 			//UARTprintf((const char*)"P[0] = %d\t P[1] = %d\n",G_ENVCONFIG.Pollingtime[0],G_ENVCONFIG.Pollingtime[1]);
 			UARTprintf((const char*) "----Test_merge = %d----\n", test_merge);
 			UARTprintf(
@@ -726,6 +742,11 @@ Void NEthuartHandler(UArg arg0, UArg arg1) {
 				packet_num = Rs4852Array(total_array);
 				Array2Packet(packet_num, uart);
 			}
+
+			CloseRs485();
+
+			rs485_init(rs485_timeout_1);
+
 			//end_time =  Clock_getTicks(); //calculate JB Join AM Time
 
 			//UARTprintf((const char*)"execution time=%d \n",end_time-start_time);
@@ -776,7 +797,7 @@ Void NEthuartHandler(UArg arg0, UArg arg1) {
 			 j++;
 			 //UARTprintf((const char*)"\n\n\n\n----Debug j = %d----\n\n\n\n\n",j);
 			 }*/
-
+			 CloseRs485();
 		}
 	}
 }
